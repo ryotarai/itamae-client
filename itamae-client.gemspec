@@ -1,11 +1,11 @@
 # coding: utf-8
 lib = File.expand_path('../lib', __FILE__)
 $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
-require 'itamae/server/client/version'
+require 'itamae/client/version'
 
 Gem::Specification.new do |spec|
-  spec.name          = "itamae-server-client"
-  spec.version       = Itamae::Server::Handler::VERSION
+  spec.name          = "itamae-client"
+  spec.version       = Itamae::Client::VERSION
   spec.authors       = ["Ryota Arai"]
   spec.email         = ["ryota-arai@cookpad.com"]
 
