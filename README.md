@@ -8,23 +8,21 @@ TODO: Delete this and the text above, and describe your gem
 
 ## Installation
 
-Add this line to your application's Gemfile:
-
-```ruby
-gem 'itamae-client'
-```
-
-And then execute:
-
-    $ bundle
-
-Or install it yourself as:
-
     $ gem install itamae-client
 
 ## Usage
 
-TODO: Write usage instructions here
+### Oneshot
+
+```
+$ itamae-client apply --tag key1:value1 [--dry-run]
+```
+
+### Consul event handler
+
+```
+$ itamae-client watch --consul http://localhost:8500
+```
 
 ## Development
 
