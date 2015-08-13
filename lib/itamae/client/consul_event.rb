@@ -7,11 +7,14 @@ module Itamae
       def self.all
         @all ||= JSON.parse($stdin.read).map do |e|
           self.new.tap do |event|
-            event.payload = Base64.decode64(e.fetch('Payload'))
+            event.payload = JSON.parse(Base64.decode64(e.fetch('Payload')))
           end
         end
+      end
+
+      def self.last
+        all.last
       end
     end
   end
 end
-

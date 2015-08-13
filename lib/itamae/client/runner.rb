@@ -12,7 +12,10 @@ module Itamae
 
       class Error < StandardError; end
 
-      def initialize(options)
+      def initialize(revision, execution, host_execution, options)
+        @revision = revision
+        @execution = execution
+        @host_execution = host_execution
         @options = options
 
         prepare
@@ -23,26 +26,25 @@ module Itamae
 
         working_dir = Dir.pwd
         in_tmpdir do
-          node_attribute = File.expand_path(@options[:node_attribute], working_dir)
-          if File.executable?(node_attribute)
-            system_or_abort(node_attribute, out: "node.json")
-          else
-            FileUtils.cp(node_attribute, 'node.json')
+          if node_attribute = @options[:node_attribute]
+            node_attribute = File.expand_path(node_attribute, working_dir)
+            if File.executable?(node_attribute)
+              system_or_abort(node_attribute, out: "node.json")
+            else
+              FileUtils.cp(node_attribute, 'node.json')
+            end
           end
 
           # download
           system_or_abort("wget", "-O", "recipes.tar", @revision.file_url)
           system_or_abort("tar", "xf", "recipes.tar")
 
-          cmd = [ITAMAE_BIN, "local", '--node-json', 'node.json', '--host_execution-level', 'debug']
-          cmd << "--dry-run" if @execution.is_dry_run
-          cmd << BOOTSTRAP_RECIPE_FILE
+          args = ['--log-level', 'debug']
+          args << '--node-json' << 'node.json' if node_attribute
+          args << "--dry-run" if @execution.is_dry_run
+          args << BOOTSTRAP_RECIPE_FILE
 
-          if lock_concurrency = @options[:lock_concurrency]
-            cmd = ["consul", "lock", "-n", lock_concurrency.to_s, @options[:lock_name], cmd.shelljoin]
-          end
-
-          execute_itamae(*cmd)
+          execute_itamae(*args)
         end
         @host_execution.mark_as('completed')
       rescue
@@ -52,16 +54,12 @@ module Itamae
 
       private
 
-      def execute_itamae(*cmd)
+      def execute_itamae(*args)
         io = MultiIO.new($stdout, @host_execution.create_writer)
 
         Bundler.with_clean_env do
+          cmd = [ITAMAE_BIN, "local"] + args
           Open3.popen3(*cmd) do |stdin, stdout, stderr, wait_thr|
-            @signal_handlers << proc do
-              # consul lock can treat only INT signal properly.
-              Process.kill(:INT, wait_thr[:pid])
-            end
-
             stdin.close
             readers = [stdout, stderr]
             while readers.any?
@@ -82,8 +80,6 @@ module Itamae
             unless exitstatus == 0
               raise "Itamae exited with #{exitstatus}"
             end
-
-            @signal_handlers.pop
           end
         end
       end
@@ -99,22 +95,6 @@ module Itamae
 
       def prepare
         register_trap
-
-        event = ConsulEvent.all.last
-        unless event
-          puts "no Consul event"
-          exit
-        end
-
-        client = APIClient.new(@options[:server_url])
-
-        @execution = client.execution(event.payload.to_i)
-        @revision = client.revision(@execution.revision_id)
-        @host_execution = @execution.host_executions.first
-
-        if @options[:once] && @host_execution.status != "pending"
-          raise "This event is already executed. (#{@host_execution})"
-        end
 
         @signal_handlers << proc do
           @host_execution.mark_as('aborted')
@@ -150,4 +130,3 @@ module Itamae
     end
   end
 end
-

@@ -8,14 +8,18 @@ module Itamae
 
       module Response
         class Execution < Struct.new(:client, :id, :revision_id, :is_dry_run)
+          def revision
+            self.client.revision(revision_id)
+          end
+
           def host_executions
             self.client.host_executions(execution_id: self.id)
           end
         end
 
-        class Revision < Struct.new(:client, :id, :file_path)
+        class Revision < Struct.new(:client, :id, :file_url)
           def file_url
-            URI.join(client.server_url, self.file_path).to_s
+            URI.join(client.server_url, super).to_s
           end
         end
 
@@ -32,7 +36,7 @@ module Itamae
 
       class HostExecutionWriter
         def initialize(host_execution)
-          @endpoint = "host_executions/#{host_execution.id}/append.json"
+          @endpoint = "host_executions/#{host_execution.id}/append_log.json"
           @conn = Faraday.new(url: host_execution.client.server_url) do |f|
             f.adapter Faraday.default_adapter
           end
@@ -64,6 +68,11 @@ module Itamae
         create_model_from_response(Response::Execution, res)
       end
 
+      def create_execution(params)
+        res = post("/executions.json", execution: params)
+        create_model_from_response(Response::Execution, res)
+      end
+
       def revision(id)
         res = get("/revisions/#{id}.json")
         create_model_from_response(Response::Revision, res)
@@ -75,6 +84,11 @@ module Itamae
         get("/host_executions.json", criteria).map do |res|
           create_model_from_response(Response::HostExecution, res)
         end
+      end
+
+      def create_host_execution(params)
+        res = post("/host_executions.json", host_execution: params)
+        create_model_from_response(Response::HostExecution, res)
       end
 
       def update_host_execution(id, data = {})
@@ -93,26 +107,27 @@ module Itamae
         end
       end
 
-      def get(*args)
-        res = @conn.get(*args)
+      def http_request(method, valid_status, *args)
+        res = @conn.public_send(method, *args)
 
-        unless 200 <= res.status && res.status < 300
-          raise Error, "API response is not 2xx. (#{res.inspect})"
+        unless valid_status.include?(res.status)
+          raise Error, "invalid API response (#{res.status}: #{res.body})"
         end
 
         JSON.parse(res.body)
       end
 
+      def get(*args)
+        http_request(:get, 200...300, *args)
+      end
+
+      def post(*args)
+        http_request(:post, 200...300, *args)
+      end
+
       def patch(*args)
-        res = @conn.patch(*args)
-
-        unless 200 <= res.status && res.status < 400
-          raise Error, "API response is not 2xx or 3xx. (#{res.inspect})"
-        end
-
-        JSON.parse(res.body)
+        http_request(:patch, 200...300, *args)
       end
     end
   end
 end
-
