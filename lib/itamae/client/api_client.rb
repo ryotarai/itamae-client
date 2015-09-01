@@ -52,7 +52,7 @@ module Itamae
           end
 
           unless 200 <= res.status && res.status < 300
-            raise "sending host_execution failed"
+            raise "writing log failed"
           end
         end
       end
