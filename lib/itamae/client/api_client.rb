@@ -91,6 +91,7 @@ module Itamae
       end
 
       def create_host_execution(params)
+        params = {host: hostname}.merge(params)
         res = post("/host_executions.json", host_execution: params)
         create_model_from_response(Response::HostExecution, res)
       end
