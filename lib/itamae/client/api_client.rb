@@ -113,8 +113,8 @@ module Itamae
       def create_model_from_response(klass, res)
         klass.new.tap do |model|
           model.client = self
-          model.members.each do |f|
-            next if f == :client
+          members = model.members - [:client]
+          members.each do |f|
             model[f] = res.fetch(f.to_s)
           end
         end
