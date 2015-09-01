@@ -12,8 +12,10 @@ module Itamae
             self.client.revision(revision_id)
           end
 
-          def host_executions
-            self.client.host_executions(execution_id: self.id)
+          def host_execution
+            self.client.host_executions(execution_id: self.id).first
+          end
+
           def in_progress?
             self.status == "in_progress"
           end
