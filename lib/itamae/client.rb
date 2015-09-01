@@ -5,8 +5,14 @@ require "itamae/client/multi_io"
 require "itamae/client/runner"
 require "itamae/client/version"
 
+require "logger"
+
 module Itamae
   module Client
-    # Your code goes here...
+    @logger ||= ::Logger.new($stdout)
+
+    class << self
+      attr_accessor :logger
+    end
   end
 end
