@@ -19,7 +19,7 @@ module Itamae
           end
         end
 
-        class Revision < Struct.new(:client, :id, :file_url)
+        class Revision < Struct.new(:client, :id, :file_url, :active?)
           def file_url
             URI.join(client.server_url, super).to_s
           end
