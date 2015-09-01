@@ -7,13 +7,15 @@ module Itamae
       class Error < StandardError; end
 
       module Response
-        class Execution < Struct.new(:client, :id, :revision_id, :is_dry_run)
+        class Execution < Struct.new(:client, :id, :revision_id, :is_dry_run, :status)
           def revision
             self.client.revision(revision_id)
           end
 
           def host_executions
             self.client.host_executions(execution_id: self.id)
+          def in_progress?
+            self.status == "in_progress"
           end
         end
 
