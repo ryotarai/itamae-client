@@ -40,7 +40,7 @@ module Itamae
 
       class HostExecutionWriter
         def initialize(host_execution)
-          @endpoint = "host_executions/#{host_execution.id}/append_log.json"
+          @endpoint = "host_executions/#{host_execution.id}/log.json"
           @conn = Faraday.new(url: host_execution.client.server_url) do |f|
             f.adapter Faraday.default_adapter
           end
