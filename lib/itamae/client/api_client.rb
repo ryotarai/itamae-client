@@ -83,7 +83,7 @@ module Itamae
       end
 
       def host_executions(criteria = {})
-        criteria = {host: Socket.gethostname}.merge(criteria)
+        criteria = {host: hostname}.merge(criteria)
 
         get("/host_executions.json", criteria).map do |res|
           create_model_from_response(Response::HostExecution, res)
@@ -100,6 +100,14 @@ module Itamae
       end
 
       private
+
+      def hostname
+        `hostname -f`.tap do
+          unless $?.exitstatus == 0
+            raise "`hostname -f` failed"
+          end
+        end.chomp
+      end
 
       def create_model_from_response(klass, res)
         klass.new.tap do |model|
