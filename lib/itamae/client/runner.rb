@@ -39,6 +39,7 @@ module Itamae
 
           system_or_abort("tar", "xf", dst)
 
+          Itamae.logger = Itamae::Client.logger
           Itamae::Runner.run([File.join(tmpdir, @bootstrap_file)], "local", run_option)
         end
       end
