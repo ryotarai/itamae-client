@@ -47,12 +47,14 @@ module Itamae
               raise "The event is too old"
             end
 
-            runner = Runner.new(
-              dry_run: data['dry_run'],
-              bootstrap_file: data['bootstrap_file'] || @config.bootstrap_file,
-              node_json: @config.node_json,
-            )
-            runner.run(data.fetch('recipe_uri'))
+            lock(!data['dry_run'] && @config.consul_lock_limit) do
+              runner = Runner.new(
+                dry_run: data['dry_run'],
+                bootstrap_file: data['bootstrap_file'] || @config.bootstrap_file,
+                node_json: @config.node_json,
+              )
+              runner.run(data.fetch('recipe_uri'))
+            end
           rescue => err
             Itamae::Client.logger.error "#{err}\n#{err.backtrace.join("\n")}"
           end
@@ -80,6 +82,20 @@ module Itamae
           klass.new(logger_def)
         end
         Itamae::Client.logger = Multiplexer.new(*loggers)
+      end
+
+      def lock(lock_needed)
+        if lock_needed
+          lock = Consul::Lock.new(@config.consul_lock_prefix, @config.consul_lock_limit)
+          Itamae::Client.logger.info "Waiting for obtaining lock"
+
+          lock.with_lock do
+            Itamae::Client.logger.info "Lock obtained"
+            yield
+          end
+        else
+          yield
+        end
       end
 
       # desc 'consul-watch', 'watch Consul events'

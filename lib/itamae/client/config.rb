@@ -10,7 +10,8 @@ module Itamae
         ],
         "consul_url" => "http://localhost:8500",
         "consul_event_name" => "itamae-client",
-        "consul_index_file" => "/var/lib/itamae-client.consul.index"
+        "consul_index_file" => "/var/lib/itamae-client.consul.index",
+        "consul_lock_prefix" => "itamae-client",
       }
 
       def initialize
@@ -26,11 +27,13 @@ module Itamae
 
       %w!
         bootstrap_file
+        consul_event_name
+        consul_index_file
+        consul_lock_limit
+        consul_lock_prefix
+        consul_url
         loggers
         node_json
-        consul_url
-        consul_index_file
-        consul_event_name
         secrets
       !.each do |m|
         class_eval <<-EOC

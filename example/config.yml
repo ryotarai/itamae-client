@@ -1,3 +1,4 @@
 node_json: example/node.json
 secrets:
   - alice
+consul_lock_limit: 1
