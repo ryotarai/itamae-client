@@ -27,6 +27,38 @@ module Itamae
         runner.run(recipe_uri)
       end
 
+      desc 'watch-consul', 'watch Consul events'
+      define_run_method_options
+      def watch_consul
+        setup
+
+        unless @config.secrets
+          puts "Please set 'secrets' value in config file"
+          abort
+        end
+
+        watcher = Consul::EventWatcher.new(@config.consul_url, @config.consul_index_file)
+        watcher.watch do |event|
+          begin
+            PayloadValidator.new(@config.secrets).validate!(event.payload)
+            data = JSON.parse(event.payload.match(/\A(.+)\|/)[1])
+
+            if Time.now - Time.parse(data.fetch('time')) > 60
+              raise "The event is too old"
+            end
+
+            runner = Runner.new(
+              dry_run: data['dry_run'],
+              bootstrap_file: data['bootstrap_file'] || @config.bootstrap_file,
+              node_json: @config.node_json,
+            )
+            runner.run(data.fetch('recipe_uri'))
+          rescue => err
+            Itamae::Client.logger.error "#{err}\n#{err.backtrace.join("\n")}"
+          end
+        end
+      end
+
       private
 
       def setup

@@ -1,1 +1,3 @@
 node_json: example/node.json
+secrets:
+  - alice

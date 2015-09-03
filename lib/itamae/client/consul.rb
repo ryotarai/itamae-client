@@ -83,7 +83,7 @@ module Itamae
               event_hash = JSON.parse(res.body).last
               Itamae::Client.logger.info "new event: #{event_hash["ID"]}"
               event = Event.new.tap do |e|
-                e.payload = JSON.parse(Base64.decode64(event_hash.fetch('Payload')))
+                e.payload = Base64.decode64(event_hash.fetch('Payload'))
               end
 
               yield(event)

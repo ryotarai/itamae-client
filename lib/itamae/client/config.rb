@@ -8,6 +8,8 @@ module Itamae
         "loggers" => [
           {"type" => "stdout"},
         ],
+        "consul_url" => "http://localhost:8500",
+        "consul_index_file" => "/var/lib/itamae-client.consul.index"
       }
 
       def initialize
@@ -21,7 +23,7 @@ module Itamae
       def validate!
       end
 
-      %w!bootstrap_file loggers node_json!.each do |m|
+      %w!bootstrap_file loggers node_json consul_url consul_index_file secrets!.each do |m|
         class_eval <<-EOC
           def #{m}
             @hash['#{m}']
