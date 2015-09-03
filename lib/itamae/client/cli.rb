@@ -37,7 +37,7 @@ module Itamae
           abort
         end
 
-        watcher = Consul::EventWatcher.new(@config.consul_url, @config.consul_index_file)
+        watcher = Consul::EventWatcher.new(@config.consul_url, @config.consul_event_name, @config.consul_index_file)
         watcher.watch do |event|
           begin
             PayloadValidator.new(@config.secrets).validate!(event.payload)

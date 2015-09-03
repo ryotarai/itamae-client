@@ -13,4 +13,4 @@ signature = OpenSSL::HMAC.hexdigest(OpenSSL::Digest.new('sha1'), secret, data.to
 
 payload = "#{data.to_json}|#{signature}"
 
-system "consul", "event", "-name", "itamae", payload
+system "consul", "event", "-name", "itamae-client", payload

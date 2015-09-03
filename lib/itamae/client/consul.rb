@@ -44,8 +44,9 @@ module Itamae
       end
 
       class EventWatcher
-        def initialize(url, index_file)
+        def initialize(url, name, index_file)
           @url = url
+          @name = name
           @index_file = Pathname.new(index_file)
         end
 
@@ -66,6 +67,7 @@ module Itamae
               Itamae::Client.logger.debug "waiting for a new event"
               res = conn.get do |req|
                 req.url "/v1/event/list"
+                req.params['name'] = @name
                 req.params['index'] = @index_file.read
                 req.options.timeout = 60 * 10 # 10 min
               end
@@ -81,6 +83,8 @@ module Itamae
               @index_file.write(res.headers["X-Consul-Index"])
 
               event_hash = JSON.parse(res.body).last
+              next unless event_hash
+
               Itamae::Client.logger.info "new event: #{event_hash["ID"]}"
               event = Event.new.tap do |e|
                 e.payload = Base64.decode64(event_hash.fetch('Payload'))

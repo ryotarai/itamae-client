@@ -9,6 +9,7 @@ module Itamae
           {"type" => "stdout"},
         ],
         "consul_url" => "http://localhost:8500",
+        "consul_event_name" => "itamae-client",
         "consul_index_file" => "/var/lib/itamae-client.consul.index"
       }
 
@@ -23,7 +24,15 @@ module Itamae
       def validate!
       end
 
-      %w!bootstrap_file loggers node_json consul_url consul_index_file secrets!.each do |m|
+      %w!
+        bootstrap_file
+        loggers
+        node_json
+        consul_url
+        consul_index_file
+        consul_event_name
+        secrets
+      !.each do |m|
         class_eval <<-EOC
           def #{m}
             @hash['#{m}']
