@@ -19,7 +19,7 @@ Gem::Specification.new do |spec|
   spec.executables   = spec.files.grep(%r{^exe/}) { |f| File.basename(f) }
   spec.require_paths = ["lib"]
 
-  spec.add_dependency "itamae"
+  spec.add_dependency "itamae", "~> 1.5", ">= 1.5.1"
   spec.add_dependency "thor"
   spec.add_dependency "faraday"
   spec.add_dependency "aws-sdk", "~> 2"
