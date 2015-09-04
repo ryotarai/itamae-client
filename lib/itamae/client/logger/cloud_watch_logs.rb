@@ -14,6 +14,8 @@ module Itamae
             @log_group = options.fetch('log_group')
             @log_stream = "#{execution_id}/#{hostname}"
             @events = []
+            
+            @client = create_client(options)
 
             create_stream
             start_sending
@@ -30,7 +32,7 @@ module Itamae
           private
 
           def create_stream
-            client.create_log_stream({
+            @client.create_log_stream({
               log_group_name: @log_group,
               log_stream_name: @log_stream,
             })
@@ -61,7 +63,7 @@ module Itamae
                     req[:sequence_token] = token
                   end
 
-                  res = client.put_log_events(req)
+                  res = @client.put_log_events(req)
                   token = res.next_sequence_token
                 end
 
@@ -78,8 +80,15 @@ module Itamae
             end
           end
 
-          def client
-            @client ||= Aws::CloudWatchLogs::Client.new
+          def create_client(options)
+            client_opts = {}
+            client_opts[:region] = options[:region] if options[:region]
+            if options[:access_key_id] && options[:secret_access_key]
+              client_opts[:credentials] = Aws::Credentials.new(
+                options[:access_key_id], options[:secret_access_key])
+            end
+
+            Aws::CloudWatchLogs::Client.new(client_opts)
           end
         end
       end
