@@ -3,9 +3,10 @@ require 'logger'
 module Itamae
   module Client
     module Logger
-      class Stdout < ::Logger
+      class File < ::Logger
         def initialize(options)
-          super($stdout)
+          path = options.fetch('path')
+          super(open(path, 'a'))
         end
       end
     end

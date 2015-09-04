@@ -1,4 +1,6 @@
 require "itamae/client/logger/stdout"
+require "itamae/client/logger/syslog"
+require "itamae/client/logger/file"
 
 module Itamae
   module Client
