@@ -7,3 +7,5 @@ loggers:
   - type: file
     path: /tmp/itamae-client.log
   - type: syslog
+  - type: cloud_watch_logs
+    log_group: itamae-client-example

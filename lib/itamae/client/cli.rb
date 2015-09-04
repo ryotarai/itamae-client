@@ -16,8 +16,12 @@ module Itamae
       desc 'apply RECIPE_URI', 'run Itamae'
       define_run_method_options
       method_option :dry_run, type: :boolean, default: false
+      method_option :execution_id, type: :string
       def apply(recipe_uri)
-        setup
+        load_config
+
+        @execution_id = options[:execution_id] || Time.now.to_i.to_s
+        setup_loggers
 
         runner = Runner.new(
           dry_run: options[:dry_run],
@@ -30,7 +34,7 @@ module Itamae
       desc 'watch-consul', 'watch Consul events'
       define_run_method_options
       def watch_consul
-        setup
+        load_config
 
         unless @config.secrets
           puts "Please set 'secrets' value in config file"
@@ -42,6 +46,9 @@ module Itamae
           begin
             PayloadValidator.new(@config.secrets).validate!(event.payload)
             data = JSON.parse(event.payload.match(/\A(.+)\|/)[1])
+
+            @execution_id = data.fetch('execution_id')
+            setup_loggers
 
             if Time.now - Time.parse(data.fetch('time')) > 60
               raise "The event is too old"
@@ -63,13 +70,6 @@ module Itamae
 
       private
 
-      def setup
-        Itamae::Client.logger.debug "Starting"
-        load_config
-        setup_loggers
-        Itamae::Client.logger.debug "Setting up done"
-      end
-
       def load_config
         @config = Itamae::Client::Config.new
         @config.load_yaml(options[:config]) if options[:config]
@@ -79,7 +79,7 @@ module Itamae
       def setup_loggers
         loggers = @config.loggers.map do |logger_def|
           klass = Itamae::Client::Logger.class_from_type(logger_def.delete("type"))
-          klass.new(logger_def)
+          klass.new(logger_def.merge(execution_id: @execution_id))
         end
         Itamae::Client.logger = Multiplexer.new(*loggers)
       end
