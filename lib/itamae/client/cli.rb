@@ -35,6 +35,7 @@ module Itamae
       define_run_method_options
       def watch_consul
         load_config
+        register_signal_handlers
 
         unless @config.secrets
           puts "Please set 'secrets' value in config file"
@@ -55,6 +56,12 @@ module Itamae
             end
 
             lock(!data['dry_run'] && @config.consul_lock_limit) do
+              if @abort
+                Itamae::Client.logger.info "Aborted."
+                @abort = false
+                break
+              end
+
               runner = Runner.new(
                 dry_run: data['dry_run'],
                 bootstrap_file: data['bootstrap_file'] || @config.bootstrap_file,
@@ -64,6 +71,8 @@ module Itamae
             end
           rescue => err
             Itamae::Client.logger.error "#{err}\n#{err.backtrace.join("\n")}"
+          ensure
+            Itamae::Client.reset_logger
           end
         end
       end
@@ -78,7 +87,7 @@ module Itamae
 
       def setup_loggers
         loggers = @config.loggers.map do |logger_def|
-          klass = Itamae::Client::Logger.class_from_type(logger_def.delete("type"))
+          klass = Itamae::Client::Logger.class_from_type(logger_def.fetch("type"))
           klass.new(logger_def.merge(execution_id: @execution_id))
         end
         Itamae::Client.logger = Multiplexer.new(*loggers)
@@ -95,6 +104,13 @@ module Itamae
           end
         else
           yield
+        end
+      end
+
+      def register_signal_handlers
+        Signal.trap(:USR1) do
+          Itamae::Client.logger.info "Aborted by USR1"
+          @abort = true
         end
       end
     end

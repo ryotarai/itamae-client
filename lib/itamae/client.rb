@@ -11,10 +11,14 @@ require "logger"
 
 module Itamae
   module Client
-    @logger ||= Multiplexer.new(::Logger.new($stdout))
-
     class << self
       attr_accessor :logger
+
+      def reset_logger
+        @logger ||= Multiplexer.new(::Logger.new($stdout))
+      end
     end
+
+    reset_logger
   end
 end
