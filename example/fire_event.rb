@@ -4,7 +4,7 @@ require 'time'
 
 data = {
   'time' => Time.now.iso8601,
-  'dry_run' => true,
+  'dry_run' => false,
   'recipe_uri' => File.join(__dir__, 'recipes.tar.gz'),
   'execution_id' => Time.now.to_i.to_s,
 }

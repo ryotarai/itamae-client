@@ -2,10 +2,11 @@ node_json: example/node.json
 secrets:
   - alice
 consul_lock_limit: 1
+consul_index_file: /tmp/itamae-client.consul.index
 loggers:
   - type: stdout
   - type: file
     path: /tmp/itamae-client.log
   - type: syslog
-  - type: cloud_watch_logs
-    log_group: itamae-client-example
+  # - type: cloud_watch_logs
+  #   log_group: itamae-client-example
