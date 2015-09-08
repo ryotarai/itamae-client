@@ -64,9 +64,10 @@ secrets: # required for Consul mode
 bootstrap_file: bootstrap.rb # optional (default: bootstrap.rb)
 logger:
   - type: stdout
-  - type: cloudwatch_logs
 node_json: /path/to/node.json # optional (If this is executable file, stdout result of the executable will be used)
 ```
+
+See [example configuration](https://github.com/ryotarai/itamae-client/blob/master/example/config.yml) too.
 
 ## Contributing
 
